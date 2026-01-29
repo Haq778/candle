@@ -1,12 +1,20 @@
 import { useEffect, useRef, useState } from "react";
-import { createChart, CandlestickSeries } from "lightweight-charts";
+import {
+  createChart,
+  CandlestickSeries,
+  LineSeries,
+} from "lightweight-charts";
 
 const API_BASE = "http://localhost:8080";
 
 function App() {
   const chartContainerRef = useRef(null);
+
   const chartRef = useRef(null);
-  const seriesRef = useRef(null);
+
+  const candleSeriesRef = useRef(null);
+  const lineSeriesRef = useRef(null);
+
   const realtimeTimerRef = useRef(null);
 
   const [tableData, setTableData] = useState([]);
@@ -34,6 +42,9 @@ function App() {
       },
     });
 
+    // =========================
+    // CANDLESTICK SERIES
+    // =========================
     const candleSeries = chart.addSeries(CandlestickSeries, {
       upColor: "#26a69a",
       downColor: "#ef5350",
@@ -43,8 +54,17 @@ function App() {
       wickDownColor: "#ef5350",
     });
 
+    // =========================
+    // LINE SERIES (CURVE)
+    // =========================
+    const lineSeries = chart.addSeries(LineSeries, {
+      color: "blue",
+      lineWidth: 2,
+    });
+
     chartRef.current = chart;
-    seriesRef.current = candleSeries;
+    candleSeriesRef.current = candleSeries;
+    lineSeriesRef.current = lineSeries;
 
     return () => {
       chart.remove();
@@ -55,13 +75,27 @@ function App() {
   // LOAD INITIAL DATA
   // =========================
   const loadInitialChart = async () => {
-    const res = await fetch(
-      `${API_BASE}/api/candles/chart?symbol=PEPEUSDT&interval=15m&limit=100`
-    );
-    const json = await res.json();
+    try {
+      const res = await fetch(
+        `${API_BASE}/api/candles/chart?symbol=PEPEUSDT&interval=15m&limit=100`
+      );
 
-    if (json.success && seriesRef.current) {
-      seriesRef.current.setData(json.data);
+      const json = await res.json();
+
+      if (json.success) {
+        // Candlestick Data
+        candleSeriesRef.current.setData(json.data);
+
+        // Line Data (Close Curve)
+        const lineData = json.data.map((c) => ({
+          time: c.time,
+          value: c.close,
+        }));
+
+        lineSeriesRef.current.setData(lineData);
+      }
+    } catch (err) {
+      console.error("Initial Load Error:", err);
     }
   };
 
@@ -70,34 +104,39 @@ function App() {
   }, []);
 
   // =========================
-  // REAL-TIME UPDATE
+  // REAL-TIME UPDATE (15 DETIK)
   // =========================
   useEffect(() => {
-    if (!seriesRef.current) return;
+    if (!candleSeriesRef.current || !lineSeriesRef.current) return;
 
     realtimeTimerRef.current = setInterval(async () => {
       try {
         const res = await fetch(
           `${API_BASE}/api/candles/latest?symbol=PEPEUSDT&interval=15m`
         );
+
         const json = await res.json();
 
         if (json.success && json.data) {
-          // 🔥 REAL-TIME UPDATE
-          seriesRef.current.update(json.data);
+          // Update Candle
+          candleSeriesRef.current.update(json.data);
+
+          // Update Line Curve
+          lineSeriesRef.current.update({
+            time: json.data.time,
+            value: json.data.close,
+          });
         }
       } catch (err) {
-        console.error(err);
+        console.error("Realtime Error:", err);
       }
-    }, 2000); // setiap 2 detik
+    }, 15000); // ✅ setiap 15 detik
 
-    return () => {
-      clearInterval(realtimeTimerRef.current);
-    };
+    return () => clearInterval(realtimeTimerRef.current);
   }, []);
 
   // =========================
-  // TABLE DATA
+  // TABLE DATA PAGINATION
   // =========================
   useEffect(() => {
     fetch(`${API_BASE}/api/candles?page=${page}&limit=10`)
@@ -113,7 +152,7 @@ function App() {
     <div style={{ padding: 20 }}>
       <h1>Real-Time Candle Dashboard</h1>
 
-      <h2>Candlestick (Live)</h2>
+      <h2>Candlestick + Kurva Close Price</h2>
       <div ref={chartContainerRef} />
 
       <hr />
@@ -132,6 +171,7 @@ function App() {
             <th>Open Time</th>
           </tr>
         </thead>
+
         <tbody>
           {tableData.map((c, i) => (
             <tr key={i}>
@@ -150,10 +190,11 @@ function App() {
 
       <br />
 
-      <button onClick={() => setPage(p => Math.max(p - 1, 1))}>
+      <button onClick={() => setPage((p) => Math.max(p - 1, 1))}>
         Prev
       </button>
-      <button onClick={() => setPage(p => p + 1)}>
+
+      <button onClick={() => setPage((p) => p + 1)}>
         Next
       </button>
     </div>
