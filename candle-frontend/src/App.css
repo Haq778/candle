@@ -1,123 +1,187 @@
-/* ===========================
-   GLOBAL STYLE
-=========================== */
+/* ===============================
+   PREMIUM MODERN THEME (BRIGHTER)
+================================ */
+
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap");
+
 body {
   margin: 0;
   padding: 0;
-  font-family: "Segoe UI", Arial, sans-serif;
-  background: linear-gradient(to bottom, #f8fbff, #eef5ff);
-  color: #222;
+  font-family: "Inter", sans-serif;
+
+  /* ✅ Background dibuat lebih cerah */
+  background: radial-gradient(circle at top left, #334155, #0f172a),
+    radial-gradient(circle at bottom right, rgba(168, 85, 247, 0.35), transparent);
+
+  color: #f9fafb;
 }
 
-/* ===========================
-   MAIN DASHBOARD CONTAINER
-=========================== */
+/* ===============================
+   DASHBOARD LAYOUT
+================================ */
 .dashboard {
-  padding: 30px;
-  max-width: 1200px;
+  max-width: 1280px;
   margin: auto;
+  padding: 45px 28px;
 }
 
-/* ===========================
-   TITLES
-=========================== */
+/* ===============================
+   HEADER
+================================ */
+.header {
+  margin-bottom: 40px;
+}
+
 .title {
-  font-size: 32px;
-  font-weight: bold;
-  color: #1e3a8a;
-  margin-bottom: 10px;
+  font-size: 42px;
+  font-weight: 800;
+  letter-spacing: -1.5px;
+
+  background: linear-gradient(90deg, #38bdf8, #a78bfa, #f472b6);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
 }
 
+.desc {
+  margin-top: 10px;
+  font-size: 15px;
+
+  /* ✅ Lebih jelas */
+  color: rgba(255, 255, 255, 0.7);
+}
+
+/* ===============================
+   SECTION TITLE
+================================ */
 .subtitle {
-  font-size: 18px;
+  margin: 30px 0 14px;
+  font-size: 16px;
   font-weight: 600;
-  margin-top: 30px;
-  margin-bottom: 12px;
-  color: #2563eb;
+
+  /* ✅ Lebih terang */
+  color: rgba(255, 255, 255, 0.82);
 }
 
-/* ===========================
-   CARD STYLE
-=========================== */
+/* ===============================
+   GLASS CARD PREMIUM (BRIGHTER)
+================================ */
 .card {
-  background: white;
+  /* ✅ Card dibuat lebih terang */
+  background: rgba(255, 255, 255, 0.07);
+
+  border: 1px solid rgba(255, 255, 255, 0.12);
+
+  border-radius: 22px;
+  padding: 20px;
+
+  backdrop-filter: blur(16px);
+
+  /* ✅ Shadow lebih soft */
+  box-shadow: 0px 10px 25px rgba(0, 0, 0, 0.4);
+
+  transition: 0.25s;
+}
+
+.card:hover {
+  border-color: rgba(56, 189, 248, 0.55);
+  transform: translateY(-3px);
+}
+
+/* ===============================
+   CHART FIX (NO CUT)
+================================ */
+.chart-card {
   padding: 18px;
-  border-radius: 16px;
-  box-shadow: 0px 4px 12px rgba(30, 64, 175, 0.15);
-  margin-bottom: 25px;
 }
 
-/* ===========================
-   CHART BOX
-=========================== */
-.chart-box {
-  border: 1px solid rgba(37, 99, 235, 0.25);
+.chart-wrapper {
+  width: 100%;
+  height: 420px;
 }
 
-/* ===========================
-   TABLE STYLE
-=========================== */
+/* ===============================
+   TABLE CLEAN MODERN
+================================ */
 table {
   width: 100%;
   border-collapse: collapse;
-  overflow: hidden;
-  border-radius: 12px;
-}
-
-thead {
-  background: linear-gradient(to right, #1e3a8a, #2563eb);
-  color: white;
+  font-size: 14px;
 }
 
 th {
-  padding: 12px;
-  font-size: 14px;
-  letter-spacing: 0.5px;
+  padding: 14px;
+  font-size: 12px;
+  font-weight: 600;
+
+  /* ✅ Header lebih terang */
+  color: rgba(255, 255, 255, 0.65);
+
+  border-bottom: 1px solid rgba(255, 255, 255, 0.15);
 }
 
 td {
-  padding: 10px;
+  padding: 14px;
   text-align: center;
-  font-size: 14px;
+
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+
+  /* ✅ Isi lebih jelas */
+  color: rgba(255, 255, 255, 0.9);
 }
 
-/* Zebra row */
-tbody tr:nth-child(even) {
-  background: #f3f8ff;
-}
-
-/* Hover effect */
+/* Hover Row */
 tbody tr:hover {
-  background: rgba(37, 99, 235, 0.15);
+  background: rgba(56, 189, 248, 0.12);
   transition: 0.2s;
 }
 
-/* ===========================
-   PAGINATION BUTTONS
-=========================== */
-.pagination {
-  margin-top: 18px;
-  display: flex;
-  justify-content: center;
-  gap: 12px;
+/* No Data */
+.nodata {
+  padding: 20px;
+  text-align: center;
+  font-style: italic;
+  color: rgba(255, 255, 255, 0.45);
 }
 
-button {
-  padding: 10px 20px;
-  border: none;
-  border-radius: 10px;
-  cursor: pointer;
+/* ===============================
+   PAGINATION MODERN
+================================ */
+.pagination {
+  margin-top: 24px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 16px;
+}
+
+.pageinfo {
+  font-size: 13px;
   font-weight: 600;
-  background: linear-gradient(to right, #2563eb, #1e40af);
+
+  /* ✅ Lebih terang */
+  color: rgba(255, 255, 255, 0.75);
+}
+
+/* Button Modern Premium */
+button {
+  padding: 10px 18px;
+  border-radius: 14px;
+
+  border: 1px solid rgba(56, 189, 248, 0.45);
+  background: rgba(56, 189, 248, 0.18);
+
   color: white;
+  font-weight: 600;
+
+  cursor: pointer;
   transition: 0.25s;
 }
 
 button:hover {
-  transform: translateY(-2px);
-  box-shadow: 0px 4px 10px rgba(37, 99, 235, 0.3);
+  background: rgba(167, 139, 250, 0.28);
+  border-color: rgba(167, 139, 250, 0.65);
 }
 
 button:active {
-  transform: scale(0.97);
+  transform: scale(0.96);
 }

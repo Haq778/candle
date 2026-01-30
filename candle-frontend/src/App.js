@@ -22,44 +22,43 @@ function App() {
   const [page, setPage] = useState(1);
 
   // =========================
-  // INIT CHART
+  // INIT CHART RESPONSIVE FIX
   // =========================
   useEffect(() => {
     if (!chartContainerRef.current) return;
 
     const chart = createChart(chartContainerRef.current, {
       width: chartContainerRef.current.clientWidth,
-      height: 400,
+      height: 420,
+
       layout: {
-        background: { color: "#ffffff" },
-        textColor: "#000",
+        background: { color: "transparent" },
+        textColor: "#dbeafe",
       },
+
       grid: {
-        vertLines: { color: "#eee" },
-        horzLines: { color: "#eee" },
+        vertLines: { color: "rgba(255,255,255,0.05)" },
+        horzLines: { color: "rgba(255,255,255,0.05)" },
       },
+
       timeScale: {
         timeVisible: true,
+        borderColor: "rgba(255,255,255,0.08)",
       },
     });
 
-    // =========================
-    // CANDLESTICK SERIES
-    // =========================
+    // Candlestick Series
     const candleSeries = chart.addSeries(CandlestickSeries, {
-      upColor: "#26a69a",
-      downColor: "#ef5350",
-      borderUpColor: "#26a69a",
-      borderDownColor: "#ef5350",
-      wickUpColor: "#26a69a",
-      wickDownColor: "#ef5350",
+      upColor: "#4ade80",
+      downColor: "#f87171",
+      borderVisible: false,
+      wickUpColor: "#4ade80",
+      wickDownColor: "#f87171",
     });
 
-    // =========================
-    // LINE SERIES
-    // =========================
+    // Line Series (Close Curve)
     const lineSeries = chart.addSeries(LineSeries, {
-      color: "#2563eb",
+      color: "#a78bfa",
       lineWidth: 2,
     });
 
@@ -67,7 +66,17 @@ function App() {
     candleSeriesRef.current = candleSeries;
     lineSeriesRef.current = lineSeries;
 
+    // ✅ FIX RESPONSIVE RESIZE
+    const handleResize = () => {
+      chart.applyOptions({
+        width: chartContainerRef.current.clientWidth,
+      });
+    };
+
+    window.addEventListener("resize", handleResize);
+
     return () => {
+      window.removeEventListener("resize", handleResize);
       chart.remove();
     };
   }, []);
@@ -83,10 +92,9 @@ function App() {
 
       const json = await res.json();
 
-      if (json.success) {
+      if (json.success && Array.isArray(json.data)) {
         candleSeriesRef.current.setData(json.data);
 
-        // Line Curve from Close Price
         const lineData = json.data.map((c) => ({
           time: c.time,
           value: c.close,
@@ -104,11 +112,9 @@ function App() {
   }, []);
 
   // =========================
-  // REAL-TIME UPDATE
+  // REALTIME UPDATE
   // =========================
   useEffect(() => {
-    if (!candleSeriesRef.current || !lineSeriesRef.current) return;
-
     realtimeTimerRef.current = setInterval(async () => {
       try {
         const res = await fetch(
@@ -134,35 +140,39 @@ function App() {
   }, []);
 
   // =========================
-  // TABLE DATA PAGINATION
+  // TABLE PAGINATION
   // =========================
   useEffect(() => {
     fetch(`${API_BASE}/api/candles?page=${page}&limit=10`)
       .then((res) => res.json())
-      .then((res) => {
-        if (res.success) {
-          setTableData(res.data);
+      .then((json) => {
+        if (json.success && Array.isArray(json.data)) {
+          setTableData(json.data);
+        } else {
+          setTableData([]);
         }
       });
   }, [page]);
 
   return (
     <div className="dashboard">
-      <h1 className="title">Real-Time Candle Dashboard</h1>
-
-      {/* ========================= */}
-      {/* CHART */}
-      {/* ========================= */}
-      <h2 className="subtitle">Candlestick + Kurva Close Price</h2>
-
-      <div className="card chart-box">
-        <div ref={chartContainerRef} />
+      {/* HEADER */}
+      <div className="header">
+        <h1 className="title">Candle Market Dashboard</h1>
+        <p className="desc">
+          Real-time candlestick monitoring with premium modern UI ✨
+        </p>
       </div>
 
-      {/* ========================= */}
+      {/* CHART */}
+      <h2 className="subtitle">Live Price Chart</h2>
+
+      <div className="card chart-card">
+        <div className="chart-wrapper" ref={chartContainerRef}></div>
+      </div>
+
       {/* TABLE */}
-      {/* ========================= */}
-      <h2 className="subtitle">Candle Table</h2>
+      <h2 className="subtitle">Candle Data Table</h2>
 
       <div className="card">
         <table>
@@ -180,26 +190,36 @@ function App() {
           </thead>
 
           <tbody>
-            {tableData.map((c, i) => (
-              <tr key={i}>
-                <td>{c.Symbol}</td>
-                <td>{c.Interval}</td>
-                <td>{c.Open}</td>
-                <td>{c.High}</td>
-                <td>{c.Low}</td>
-                <td>{c.Close}</td>
-                <td>{c.Volume}</td>
-                <td>{new Date(c.OpenTime).toLocaleString()}</td>
+            {tableData.length > 0 ? (
+              tableData.map((c, i) => (
+                <tr key={i}>
+                  <td>{c.symbol}</td>
+                  <td>{c.interval}</td>
+                  <td>{c.open}</td>
+                  <td>{c.high}</td>
+                  <td>{c.low}</td>
+                  <td>{c.close}</td>
+                  <td>{c.volume}</td>
+                  <td>{new Date(c.open_time).toLocaleString()}</td>
+                </tr>
+              ))
+            ) : (
+              <tr>
+                <td colSpan="8" className="nodata">
+                  No Data Available
+                </td>
               </tr>
-            ))}
+            )}
           </tbody>
         </table>
 
-        {/* PAGINATION BUTTON */}
+        {/* PAGINATION */}
         <div className="pagination">
           <button onClick={() => setPage((p) => Math.max(p - 1, 1))}>
             Prev
           </button>
+
+          <span className="pageinfo">Page {page}</span>
 
           <button onClick={() => setPage((p) => p + 1)}>Next</button>
         </div>
