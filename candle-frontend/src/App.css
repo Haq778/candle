@@ -1,38 +1,123 @@
-.App {
-  text-align: center;
+/* ===========================
+   GLOBAL STYLE
+=========================== */
+body {
+  margin: 0;
+  padding: 0;
+  font-family: "Segoe UI", Arial, sans-serif;
+  background: linear-gradient(to bottom, #f8fbff, #eef5ff);
+  color: #222;
 }
 
-.App-logo {
-  height: 40vmin;
-  pointer-events: none;
+/* ===========================
+   MAIN DASHBOARD CONTAINER
+=========================== */
+.dashboard {
+  padding: 30px;
+  max-width: 1200px;
+  margin: auto;
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  .App-logo {
-    animation: App-logo-spin infinite 20s linear;
-  }
+/* ===========================
+   TITLES
+=========================== */
+.title {
+  font-size: 32px;
+  font-weight: bold;
+  color: #1e3a8a;
+  margin-bottom: 10px;
 }
 
-.App-header {
-  background-color: #282c34;
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  font-size: calc(10px + 2vmin);
+.subtitle {
+  font-size: 18px;
+  font-weight: 600;
+  margin-top: 30px;
+  margin-bottom: 12px;
+  color: #2563eb;
+}
+
+/* ===========================
+   CARD STYLE
+=========================== */
+.card {
+  background: white;
+  padding: 18px;
+  border-radius: 16px;
+  box-shadow: 0px 4px 12px rgba(30, 64, 175, 0.15);
+  margin-bottom: 25px;
+}
+
+/* ===========================
+   CHART BOX
+=========================== */
+.chart-box {
+  border: 1px solid rgba(37, 99, 235, 0.25);
+}
+
+/* ===========================
+   TABLE STYLE
+=========================== */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  overflow: hidden;
+  border-radius: 12px;
+}
+
+thead {
+  background: linear-gradient(to right, #1e3a8a, #2563eb);
   color: white;
 }
 
-.App-link {
-  color: #61dafb;
+th {
+  padding: 12px;
+  font-size: 14px;
+  letter-spacing: 0.5px;
 }
 
-@keyframes App-logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+td {
+  padding: 10px;
+  text-align: center;
+  font-size: 14px;
+}
+
+/* Zebra row */
+tbody tr:nth-child(even) {
+  background: #f3f8ff;
+}
+
+/* Hover effect */
+tbody tr:hover {
+  background: rgba(37, 99, 235, 0.15);
+  transition: 0.2s;
+}
+
+/* ===========================
+   PAGINATION BUTTONS
+=========================== */
+.pagination {
+  margin-top: 18px;
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+}
+
+button {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  font-weight: 600;
+  background: linear-gradient(to right, #2563eb, #1e40af);
+  color: white;
+  transition: 0.25s;
+}
+
+button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0px 4px 10px rgba(37, 99, 235, 0.3);
+}
+
+button:active {
+  transform: scale(0.97);
 }

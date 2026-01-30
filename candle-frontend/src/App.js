@@ -5,13 +5,14 @@ import {
   LineSeries,
 } from "lightweight-charts";
 
+import "./App.css";
+
 const API_BASE = "http://localhost:8080";
 
 function App() {
   const chartContainerRef = useRef(null);
 
   const chartRef = useRef(null);
-
   const candleSeriesRef = useRef(null);
   const lineSeriesRef = useRef(null);
 
@@ -55,10 +56,10 @@ function App() {
     });
 
     // =========================
-    // LINE SERIES (CURVE)
+    // LINE SERIES
     // =========================
     const lineSeries = chart.addSeries(LineSeries, {
-      color: "blue",
+      color: "#2563eb",
       lineWidth: 2,
     });
 
@@ -83,10 +84,9 @@ function App() {
       const json = await res.json();
 
       if (json.success) {
-        // Candlestick Data
         candleSeriesRef.current.setData(json.data);
 
-        // Line Data (Close Curve)
+        // Line Curve from Close Price
         const lineData = json.data.map((c) => ({
           time: c.time,
           value: c.close,
@@ -104,7 +104,7 @@ function App() {
   }, []);
 
   // =========================
-  // REAL-TIME UPDATE (15 DETIK)
+  // REAL-TIME UPDATE
   // =========================
   useEffect(() => {
     if (!candleSeriesRef.current || !lineSeriesRef.current) return;
@@ -118,10 +118,8 @@ function App() {
         const json = await res.json();
 
         if (json.success && json.data) {
-          // Update Candle
           candleSeriesRef.current.update(json.data);
 
-          // Update Line Curve
           lineSeriesRef.current.update({
             time: json.data.time,
             value: json.data.close,
@@ -130,7 +128,7 @@ function App() {
       } catch (err) {
         console.error("Realtime Error:", err);
       }
-    }, 15000); // ✅ setiap 15 detik
+    }, 15000);
 
     return () => clearInterval(realtimeTimerRef.current);
   }, []);
@@ -149,54 +147,63 @@ function App() {
   }, [page]);
 
   return (
-    <div style={{ padding: 20 }}>
-      <h1>Real-Time Candle Dashboard</h1>
+    <div className="dashboard">
+      <h1 className="title">Real-Time Candle Dashboard</h1>
 
-      <h2>Candlestick + Kurva Close Price</h2>
-      <div ref={chartContainerRef} />
+      {/* ========================= */}
+      {/* CHART */}
+      {/* ========================= */}
+      <h2 className="subtitle">Candlestick + Kurva Close Price</h2>
 
-      <hr />
+      <div className="card chart-box">
+        <div ref={chartContainerRef} />
+      </div>
 
-      <h2>Candle Table</h2>
-      <table border="1" cellPadding="6" width="100%">
-        <thead>
-          <tr>
-            <th>Symbol</th>
-            <th>Interval</th>
-            <th>Open</th>
-            <th>High</th>
-            <th>Low</th>
-            <th>Close</th>
-            <th>Volume</th>
-            <th>Open Time</th>
-          </tr>
-        </thead>
+      {/* ========================= */}
+      {/* TABLE */}
+      {/* ========================= */}
+      <h2 className="subtitle">Candle Table</h2>
 
-        <tbody>
-          {tableData.map((c, i) => (
-            <tr key={i}>
-              <td>{c.Symbol}</td>
-              <td>{c.Interval}</td>
-              <td>{c.Open}</td>
-              <td>{c.High}</td>
-              <td>{c.Low}</td>
-              <td>{c.Close}</td>
-              <td>{c.Volume}</td>
-              <td>{new Date(c.OpenTime).toLocaleString()}</td>
+      <div className="card">
+        <table>
+          <thead>
+            <tr>
+              <th>Symbol</th>
+              <th>Interval</th>
+              <th>Open</th>
+              <th>High</th>
+              <th>Low</th>
+              <th>Close</th>
+              <th>Volume</th>
+              <th>Open Time</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
 
-      <br />
+          <tbody>
+            {tableData.map((c, i) => (
+              <tr key={i}>
+                <td>{c.Symbol}</td>
+                <td>{c.Interval}</td>
+                <td>{c.Open}</td>
+                <td>{c.High}</td>
+                <td>{c.Low}</td>
+                <td>{c.Close}</td>
+                <td>{c.Volume}</td>
+                <td>{new Date(c.OpenTime).toLocaleString()}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
 
-      <button onClick={() => setPage((p) => Math.max(p - 1, 1))}>
-        Prev
-      </button>
+        {/* PAGINATION BUTTON */}
+        <div className="pagination">
+          <button onClick={() => setPage((p) => Math.max(p - 1, 1))}>
+            Prev
+          </button>
 
-      <button onClick={() => setPage((p) => p + 1)}>
-        Next
-      </button>
+          <button onClick={() => setPage((p) => p + 1)}>Next</button>
+        </div>
+      </div>
     </div>
   );
 }
