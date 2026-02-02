@@ -20,14 +20,14 @@ function App() {
   const [page, setPage] = useState(1);
 
   // =========================
-  // INIT CHART
+  // INIT CHART (SAFE)
   // =========================
   useEffect(() => {
     if (!chartContainerRef.current) return;
 
     const chart = createChart(chartContainerRef.current, {
       width: chartContainerRef.current.clientWidth,
-      height: 400,
+      height: 420,
       layout: {
         background: { color: "#ffffff" },
         textColor: "#000",
@@ -42,6 +42,7 @@ function App() {
       },
     });
 
+    // Candlestick Series
     const candleSeries = chart.addSeries(CandlestickSeries, {
       upColor: "#26a69a",
       downColor: "#ef5350",
@@ -51,6 +52,7 @@ function App() {
       wickDownColor: "#ef5350",
     });
 
+    // Line Series
     const lineSeries = chart.addSeries(LineSeries, {
       color: "#2563eb",
       lineWidth: 2,
@@ -60,24 +62,45 @@ function App() {
     candleSeriesRef.current = candleSeries;
     lineSeriesRef.current = lineSeries;
 
-    return () => chart.remove();
+    // ✅ Resize Responsive Fix
+    const handleResize = () => {
+      chart.applyOptions({
+        width: chartContainerRef.current.clientWidth,
+      });
+    };
+
+    window.addEventListener("resize", handleResize);
+
+    return () => {
+      window.removeEventListener("resize", handleResize);
+      chart.remove();
+    };
   }, []);
 
   // =========================
-  // LOAD CHART DATA
+  // LOAD CHART DATA (SAFE)
   // =========================
   const loadChartData = async () => {
     try {
+      // ✅ Pastikan chart sudah siap
+      if (!candleSeriesRef.current || !lineSeriesRef.current) return;
+
       const res = await fetch(
         `${API_BASE}/api/candles/chart?symbol=PEPEUSDT&interval=15m&limit=100`
       );
 
       const json = await res.json();
 
-      if (!json.success) return;
+      // ✅ Validasi Data
+      if (!json.success || !Array.isArray(json.data)) {
+        console.warn("Chart data kosong atau error");
+        return;
+      }
 
+      // ✅ Set Data Candlestick
       candleSeriesRef.current.setData(json.data);
 
+      // ✅ Set Data Line Close Price
       const lineData = json.data.map((c) => ({
         time: c.time,
         value: c.close,
@@ -89,13 +112,19 @@ function App() {
     }
   };
 
-  // initial load
+  // =========================
+  // FIRST LOAD (AFTER CHART READY)
+  // =========================
   useEffect(() => {
-    loadChartData();
+    const timer = setTimeout(() => {
+      loadChartData();
+    }, 500);
+
+    return () => clearTimeout(timer);
   }, []);
 
   // =========================
-  // AUTO REFRESH (POLLING DB)
+  // AUTO REFRESH
   // =========================
   useEffect(() => {
     const timer = setInterval(() => {
@@ -106,13 +135,13 @@ function App() {
   }, []);
 
   // =========================
-  // TABLE DATA PAGINATION
+  // TABLE PAGINATION
   // =========================
   useEffect(() => {
     fetch(`${API_BASE}/api/candles?page=${page}&limit=10`)
       .then((res) => res.json())
       .then((res) => {
-        if (res.success) {
+        if (res.success && Array.isArray(res.data)) {
           setTableData(res.data);
         }
       })
@@ -128,8 +157,8 @@ function App() {
       {/* ========================= */}
       <h2 className="subtitle">Candlestick + Close Price</h2>
 
-      <div className="card chart-box">
-        <div ref={chartContainerRef} />
+      <div className="card chart-card">
+        <div ref={chartContainerRef} className="chart-wrapper" />
       </div>
 
       {/* ========================= */}
@@ -153,26 +182,37 @@ function App() {
           </thead>
 
           <tbody>
-            {tableData.map((c, i) => (
-              <tr key={i}>
-                <td>{c.Symbol}</td>
-                <td>{c.Interval}</td>
-                <td>{c.Open}</td>
-                <td>{c.High}</td>
-                <td>{c.Low}</td>
-                <td>{c.Close}</td>
-                <td>{c.Volume}</td>
-                <td>{new Date(c.OpenTime).toLocaleString()}</td>
+            {tableData.length === 0 ? (
+              <tr>
+                <td colSpan="8" className="nodata">
+                  No Data Available
+                </td>
               </tr>
-            ))}
+            ) : (
+              tableData.map((c, i) => (
+                <tr key={i}>
+                  <td>{c.Symbol}</td>
+                  <td>{c.Interval}</td>
+                  <td>{c.Open}</td>
+                  <td>{c.High}</td>
+                  <td>{c.Low}</td>
+                  <td>{c.Close}</td>
+                  <td>{c.Volume}</td>
+                  <td>{new Date(c.OpenTime).toLocaleString()}</td>
+                </tr>
+              ))
+            )}
           </tbody>
         </table>
 
+        {/* Pagination */}
         <div className="pagination">
           <button onClick={() => setPage((p) => Math.max(p - 1, 1))}>
             Prev
           </button>
-          <span>Page {page}</span>
+
+          <span className="pageinfo">Page {page}</span>
+
           <button onClick={() => setPage((p) => p + 1)}>Next</button>
         </div>
       </div>
