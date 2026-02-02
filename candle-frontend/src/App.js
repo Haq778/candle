@@ -16,49 +16,43 @@ function App() {
   const candleSeriesRef = useRef(null);
   const lineSeriesRef = useRef(null);
 
-  const realtimeTimerRef = useRef(null);
-
   const [tableData, setTableData] = useState([]);
   const [page, setPage] = useState(1);
 
   // =========================
-  // INIT CHART RESPONSIVE FIX
+  // INIT CHART
   // =========================
   useEffect(() => {
     if (!chartContainerRef.current) return;
 
     const chart = createChart(chartContainerRef.current, {
       width: chartContainerRef.current.clientWidth,
-      height: 420,
-
+      height: 400,
       layout: {
-        background: { color: "transparent" },
-        textColor: "#dbeafe",
+        background: { color: "#ffffff" },
+        textColor: "#000",
       },
-
       grid: {
-        vertLines: { color: "rgba(255,255,255,0.05)" },
-        horzLines: { color: "rgba(255,255,255,0.05)" },
+        vertLines: { color: "#eee" },
+        horzLines: { color: "#eee" },
       },
-
       timeScale: {
         timeVisible: true,
-        borderColor: "rgba(255,255,255,0.08)",
+        secondsVisible: false,
       },
     });
 
-    // Candlestick Series
     const candleSeries = chart.addSeries(CandlestickSeries, {
-      upColor: "#4ade80",
-      downColor: "#f87171",
-      borderVisible: false,
-      wickUpColor: "#4ade80",
-      wickDownColor: "#f87171",
+      upColor: "#26a69a",
+      downColor: "#ef5350",
+      borderUpColor: "#26a69a",
+      borderDownColor: "#ef5350",
+      wickUpColor: "#26a69a",
+      wickDownColor: "#ef5350",
     });
 
-    // Line Series (Close Curve)
     const lineSeries = chart.addSeries(LineSeries, {
-      color: "#a78bfa",
+      color: "#2563eb",
       lineWidth: 2,
     });
 
@@ -66,25 +60,13 @@ function App() {
     candleSeriesRef.current = candleSeries;
     lineSeriesRef.current = lineSeries;
 
-    // ✅ FIX RESPONSIVE RESIZE
-    const handleResize = () => {
-      chart.applyOptions({
-        width: chartContainerRef.current.clientWidth,
-      });
-    };
-
-    window.addEventListener("resize", handleResize);
-
-    return () => {
-      window.removeEventListener("resize", handleResize);
-      chart.remove();
-    };
+    return () => chart.remove();
   }, []);
 
   // =========================
-  // LOAD INITIAL DATA
+  // LOAD CHART DATA
   // =========================
-  const loadInitialChart = async () => {
+  const loadChartData = async () => {
     try {
       const res = await fetch(
         `${API_BASE}/api/candles/chart?symbol=PEPEUSDT&interval=15m&limit=100`
@@ -92,87 +74,68 @@ function App() {
 
       const json = await res.json();
 
-      if (json.success && Array.isArray(json.data)) {
-        candleSeriesRef.current.setData(json.data);
+      if (!json.success) return;
 
-        const lineData = json.data.map((c) => ({
-          time: c.time,
-          value: c.close,
-        }));
+      candleSeriesRef.current.setData(json.data);
 
-        lineSeriesRef.current.setData(lineData);
-      }
+      const lineData = json.data.map((c) => ({
+        time: c.time,
+        value: c.close,
+      }));
+
+      lineSeriesRef.current.setData(lineData);
     } catch (err) {
-      console.error("Initial Load Error:", err);
+      console.error("Chart Load Error:", err);
     }
   };
 
+  // initial load
   useEffect(() => {
-    loadInitialChart();
+    loadChartData();
   }, []);
 
   // =========================
-  // REALTIME UPDATE
+  // AUTO REFRESH (POLLING DB)
   // =========================
   useEffect(() => {
-    realtimeTimerRef.current = setInterval(async () => {
-      try {
-        const res = await fetch(
-          `${API_BASE}/api/candles/latest?symbol=PEPEUSDT&interval=15m`
-        );
-
-        const json = await res.json();
-
-        if (json.success && json.data) {
-          candleSeriesRef.current.update(json.data);
-
-          lineSeriesRef.current.update({
-            time: json.data.time,
-            value: json.data.close,
-          });
-        }
-      } catch (err) {
-        console.error("Realtime Error:", err);
-      }
+    const timer = setInterval(() => {
+      loadChartData();
     }, 15000);
 
-    return () => clearInterval(realtimeTimerRef.current);
+    return () => clearInterval(timer);
   }, []);
 
   // =========================
-  // TABLE PAGINATION
+  // TABLE DATA PAGINATION
   // =========================
   useEffect(() => {
     fetch(`${API_BASE}/api/candles?page=${page}&limit=10`)
       .then((res) => res.json())
-      .then((json) => {
-        if (json.success && Array.isArray(json.data)) {
-          setTableData(json.data);
-        } else {
-          setTableData([]);
+      .then((res) => {
+        if (res.success) {
+          setTableData(res.data);
         }
-      });
+      })
+      .catch((err) => console.error("Table Error:", err));
   }, [page]);
 
   return (
     <div className="dashboard">
-      {/* HEADER */}
-      <div className="header">
-        <h1 className="title">Candle Market Dashboard</h1>
-        <p className="desc">
-          Real-time candlestick monitoring with premium modern UI ✨
-        </p>
-      </div>
+      <h1 className="title">Real-Time Candle Dashboard</h1>
 
+      {/* ========================= */}
       {/* CHART */}
-      <h2 className="subtitle">Live Price Chart</h2>
+      {/* ========================= */}
+      <h2 className="subtitle">Candlestick + Close Price</h2>
 
-      <div className="card chart-card">
-        <div className="chart-wrapper" ref={chartContainerRef}></div>
+      <div className="card chart-box">
+        <div ref={chartContainerRef} />
       </div>
 
+      {/* ========================= */}
       {/* TABLE */}
-      <h2 className="subtitle">Candle Data Table</h2>
+      {/* ========================= */}
+      <h2 className="subtitle">Candle Table</h2>
 
       <div className="card">
         <table>
@@ -190,37 +153,26 @@ function App() {
           </thead>
 
           <tbody>
-            {tableData.length > 0 ? (
-              tableData.map((c, i) => (
-                <tr key={i}>
-                  <td>{c.symbol}</td>
-                  <td>{c.interval}</td>
-                  <td>{c.open}</td>
-                  <td>{c.high}</td>
-                  <td>{c.low}</td>
-                  <td>{c.close}</td>
-                  <td>{c.volume}</td>
-                  <td>{new Date(c.open_time).toLocaleString()}</td>
-                </tr>
-              ))
-            ) : (
-              <tr>
-                <td colSpan="8" className="nodata">
-                  No Data Available
-                </td>
+            {tableData.map((c, i) => (
+              <tr key={i}>
+                <td>{c.Symbol}</td>
+                <td>{c.Interval}</td>
+                <td>{c.Open}</td>
+                <td>{c.High}</td>
+                <td>{c.Low}</td>
+                <td>{c.Close}</td>
+                <td>{c.Volume}</td>
+                <td>{new Date(c.OpenTime).toLocaleString()}</td>
               </tr>
-            )}
+            ))}
           </tbody>
         </table>
 
-        {/* PAGINATION */}
         <div className="pagination">
           <button onClick={() => setPage((p) => Math.max(p - 1, 1))}>
             Prev
           </button>
-
-          <span className="pageinfo">Page {page}</span>
-
+          <span>Page {page}</span>
           <button onClick={() => setPage((p) => p + 1)}>Next</button>
         </div>
       </div>
